@@ -1,6 +1,5 @@
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
 from io import BytesIO
 
 def crea_griglia_overlay(larghezza, altezza, step=20):
