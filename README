@@ -1,0 +1,24 @@
+# PDF Editor
+
+Questo script ti permette di modificare facilmente file PDF aggiungendo la tua firma.
+
+## Come usare
+
+1. **Modifica il file `config.ini`**  
+    Apri il file `config.ini` e inserisci i tuoi dati seguendo le istruzioni all'interno del file. Qui puoi specificare il percorso del PDF da modificare, la posizione della firma, e altre opzioni.
+
+2. **Inserisci la tua firma**  
+    Inserisci un'immagine della tua firma (formato PNG o JPG) nella cartella ./images del progetto.
+
+3. **Esegui lo script**  
+    Avvia lo script seguendo le istruzioni fornite (ad esempio: `python main.py`).
+
+## Requisiti
+
+- Python 3.x
+- Le librerie elencate in `requirements.txt`
+
+## Note
+
+- Assicurati che il percorso del file PDF e dell'immagine della firma siano corretti.
+- Per qualsiasi problema, contattami!

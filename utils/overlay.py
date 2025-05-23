@@ -1,3 +1,4 @@
+from pathlib import Path
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
@@ -6,8 +7,15 @@ from reportlab.lib.utils import ImageReader
 
 from io import BytesIO
 from datetime import datetime
+#base dir è sbagliato, perchè non è la cartella principale del progetto, è la cartella sopra
+#quindi dobbiamo tornare indietro di un livello
+BASE_DIR = Path(__file__).resolve().parent.parent
+INPUT_DIR = BASE_DIR / "input"
+OUTPUT_DIR = BASE_DIR / "output"
+IMAGE_DIR = BASE_DIR / "images"
+SIGNATURE_PATH = IMAGE_DIR / "signature.png"
 
-def create_overlay_pdf(data, index):
+def first_overlay_pdf(data, index):
     anagrafica = data.Anagrafica()
     residenza = data.Residenza()
     professione = data.Professione()
@@ -17,7 +25,7 @@ def create_overlay_pdf(data, index):
     buffer = BytesIO()
     c = canvas.Canvas(buffer)
 
-    signature = ImageReader("./images/signature.png")
+    signature = ImageReader(str(SIGNATURE_PATH))
     orig_width, orig_height = signature.getSize()
 
     try:
@@ -106,7 +114,7 @@ def create_overlay_pdf(data, index):
         x_start = 85
         x_step = 27
         for char in anagrafica.codfisc:
-            c.drawString(x_start, 498, char)
+            c.drawString(x_start, 504, char)
             x_start += x_step
         c.setFontSize(10)
 
@@ -116,7 +124,7 @@ def create_overlay_pdf(data, index):
         x_start = 82
         x_step = 16.2
         for char in banca.iban:
-            c.drawString(x_start, 345, char)
+            c.drawString(x_start, 347, char)
             x_start += x_step
         c.setFontSize(10)
         
@@ -163,32 +171,57 @@ def create_overlay_pdf(data, index):
         target_height = (target_width / orig_width) * orig_height
         c.drawImage(signature, 360, 70, width=target_width, height=target_height, mask='auto')
 
-
-
-
     c.save()
     buffer.seek(0)
     return buffer
 
-def editor(data, pdf_input : str = "./input/1) PREASSUNTIVI AUTONOMI OCCASIONALI.pdf", pdf_output : str = "./output/modulo_compilato.pdf"):
-    reader = PdfReader(pdf_input)
-    writer = PdfWriter()
-    for i, page in enumerate(reader.pages):
-        overlay_data = create_overlay_pdf(data, i)
+def second_overlay_pdf(data, index):
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer)
 
-        if overlay_data is None:
-            writer.add_page(page)  # nessuna modifica
-            continue
+    signature = ImageReader(str(SIGNATURE_PATH))
+    orig_width, orig_height = signature.getSize()
+        
+    if index == 3:
+        print("signature")
+        target_width = 90
+        target_height = (target_width / orig_width) * orig_height
+        c.drawImage(signature, 55, 200, width=target_width, height=target_height, mask='auto')
+    
+    c.save()
+    buffer.seek(0)
+    return buffer
 
-        overlay_pdf = PdfReader(overlay_data)
-        if not overlay_pdf.pages:
-            writer.add_page(page)  # fallback sicurezza
-            continue
+def editor(data, pdf_name = ["1) PREASSUNTIVI AUTONOMI OCCASIONALI.pdf", "757_PDFsam_12052025_AUT.pdf"]):
+    
+    for j in range(2):
+        input_path = INPUT_DIR / pdf_name[j]
+        output_path = OUTPUT_DIR / pdf_name[j]
 
-        overlay_page = overlay_pdf.pages[0]
-        page.merge_page(overlay_page)
-        writer.add_page(page)
+        reader = PdfReader(input_path)
+        writer = PdfWriter()
+        for i, page in enumerate(reader.pages):
+            if j == 0:
+                overlay_data = first_overlay_pdf(data, i)
+            elif j == 1:
+                overlay_data = second_overlay_pdf(data, i)
 
-    with open(pdf_output, "wb") as f:
-        writer.write(f)
-    print(f"PDF compilato salvato come: {pdf_output}")
+            if overlay_data is None:
+                writer.add_page(page)  # nessuna modifica
+                continue
+
+            overlay_pdf = PdfReader(overlay_data)
+            if not overlay_pdf.pages:
+                writer.add_page(page)  # fallback sicurezza
+                continue
+
+            overlay_page = overlay_pdf.pages[0]
+            page.merge_page(overlay_page)
+            writer.add_page(page)
+
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "wb") as f:
+            writer.write(f)
+        print(f"PDF compilato salvato come: {output_path}")
+
+
